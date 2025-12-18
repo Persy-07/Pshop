@@ -39,6 +39,7 @@ Pshop/
 - **Vite** - Build tool moderne et rapide
 - **React Router** - Gestion des routes
 - **Axios** - Client HTTP
+- **ESLint & Prettier** - Qualité et formatage du code
 
 ### Backend
 
@@ -47,6 +48,7 @@ Pshop/
 - **TypeScript** - Typage statique
 - **CORS** - Gestion des requêtes cross-origin
 - **dotenv** - Variables d'environnement
+- **ESLint & Prettier** - Qualité et formatage du code
 
 ## Installation
 
@@ -90,6 +92,16 @@ Créer un fichier `.env` à partir de `.env.example`:
 ```bash
 cp .env.example .env
 ```
+
+## Configuration VS Code
+
+Le projet inclut des configurations VS Code pour améliorer l'expérience de développement :
+
+- **Format automatique à la sauvegarde** - Prettier formate automatiquement votre code
+- **Correction ESLint automatique** - Les erreurs ESLint sont corrigées à la sauvegarde
+- **Extensions recommandées** - ESLint et Prettier
+
+Pour profiter de ces fonctionnalités, installez les extensions recommandées lorsque VS Code vous le propose.
 
 ## Démarrage
 
@@ -141,6 +153,10 @@ L'application démarre sur `http://localhost:3000`
 - `npm run dev` - Démarre le serveur en mode développement avec rechargement automatique
 - `npm run build` - Compile le TypeScript en JavaScript
 - `npm start` - Démarre le serveur en mode production
+- `npm run lint` - Vérifie le code avec ESLint
+- `npm run lint:fix` - Corrige automatiquement les erreurs ESLint
+- `npm run format` - Formate le code avec Prettier
+- `npm run format:check` - Vérifie le formatage du code
 
 ### Frontend
 
@@ -148,6 +164,9 @@ L'application démarre sur `http://localhost:3000`
 - `npm run build` - Crée un build de production
 - `npm run preview` - Prévisualise le build de production
 - `npm run lint` - Vérifie le code avec ESLint
+- `npm run lint:fix` - Corrige automatiquement les erreurs ESLint
+- `npm run format` - Formate le code avec Prettier
+- `npm run format:check` - Vérifie le formatage du code
 
 ## Fonctionnalités à Implémenter
 
