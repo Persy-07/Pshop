@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import "./App.css";
 import Home from "./pages/Home";
+import Layout from "./components/Layout";
+import "./App.css";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
 import Login from "./pages/Login";
+import Cart from "./pages/Cart";
 import Register from "./pages/Register";
-import Layout from "./components/Layout";
 
 function App() {
   return (

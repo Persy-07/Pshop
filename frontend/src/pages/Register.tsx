@@ -53,7 +53,7 @@ function Register() {
             border: "none",
             cursor: "pointer",
           }}>
-          S'inscrire
+          S{'\''}inscrire
         </button>
       </form>
       <p style={{ marginTop: "1rem" }}>
