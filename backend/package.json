@@ -1,0 +1,17 @@
+{
+  "name": "api-pshop-backend",
+  "version": "1.0.0",
+  "description": "Site de vente de diverse article ",
+  "keywords": [
+    "api;",
+    "backend;",
+    "Pshop-api"
+  ],
+  "license": "ISC",
+  "author": "Perside Menayame",
+  "type": "module",
+  "main": "server.ts",
+  "scripts": {
+    "test": "npm run test"
+  }
+}
