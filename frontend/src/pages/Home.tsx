@@ -1,48 +1,82 @@
 import { Link } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './Home.css'
 
-const testimonials = [
-  { stars: 5, text: "Exceptional quality and impeccable customer service. I highly recommend this shop!", name: "Sophie M.", location: "Paris, France", img: 1 },
-  { stars: 5, text: "Unique and elegant pieces. Fast delivery is a real plus. I'm delighted!", name: "Marie L.", location: "Lyon, France", img: 5 },
-  { stars: 5, text: "The best site to find quality clothing. The value for money is unbeatable!", name: "Thomas B.", location: "Bordeaux, France", img: 3 },
-  { stars: 5, text: "Amazing shopping experience! The products exceeded my expectations. Will definitely shop again!", name: "Emma R.", location: "London, UK", img: 8 },
-  { stars: 4, text: "Great quality and stylish designs. Shipping was fast and packaging was perfect!", name: "Lucas M.", location: "Berlin, Germany", img: 12 },
-  { stars: 5, text: "Love the attention to detail and customer care. Every purchase has been perfect!", name: "Isabella C.", location: "Milan, Italy", img: 9 },
-  { stars: 5, text: "Fantastic selection and prices. The quality is consistently excellent!", name: "Oliver P.", location: "Amsterdam, Netherlands", img: 15 },
-  { stars: 5, text: "Professional service and top-notch products. Couldn't ask for more!", name: "Sophia K.", location: "Madrid, Spain", img: 20 },
-  { stars: 4, text: "Very satisfied with my purchases. Great quality and reasonable prices!", name: "James D.", location: "New York, USA", img: 25 },
-  { stars: 5, text: "Outstanding collection and customer service. This is my go-to shop now!", name: "Mia W.", location: "Sydney, Australia", img: 30 }
-]
-
 function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const testimonialsRef = useRef<HTMLDivElement>(null)
+  const [activeImages, setActiveImages] = useState({
+    product1: 0,
+    product2: 0,
+    product3: 0,
+    product4: 0,
+  })
+
+  // Timer pour la promotion
   const [timeLeft, setTimeLeft] = useState({
     days: 2,
     hours: 12,
-    minutes: 34,
-    seconds: 56
+    minutes: 35,
+    seconds: 48,
   })
-  const testimonialsRef = useRef<HTMLDivElement>(null)
-  
-  const galleryImages = [
-    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&auto=format&fit=crop'
-  ]
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % galleryImages.length)
-    }, 4000)
-    return () => clearInterval(timer)
-  }, [galleryImages.length])
+  // Images pour chaque produit
+  const productImages = {
+    product1: [
+      'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400',
+      'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400',
+      'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400',
+    ],
+    product2: [
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
+      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=400',
+      'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=400',
+    ],
+    product3: [
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400',
+      'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400',
+    ],
+    product4: [
+      'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400',
+      'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
+    ],
+  }
 
+  const handleDotClick = (
+    productKey: keyof typeof activeImages,
+    index: number
+  ) => {
+    setActiveImages(prev => ({
+      ...prev,
+      [productKey]: index,
+    }))
+  }
+
+  // Empêcher la navigation quand on clique sur les boutons
+  const handleButtonClick = (e: React.MouseEvent, action: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log(action)
+    // Ici vous pouvez ajouter la logique pour favoris ou achat
+  }
+
+  const handleDotClickWithStop = (
+    e: React.MouseEvent,
+    productKey: keyof typeof activeImages,
+    index: number
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+    handleDotClick(productKey, index)
+  }
+
+  // Timer countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         let { days, hours, minutes, seconds } = prev
-        
+
         if (seconds > 0) {
           seconds--
         } else if (minutes > 0) {
@@ -58,36 +92,58 @@ function Home() {
           minutes = 59
           seconds = 59
         }
-        
+
         return { days, hours, minutes, seconds }
       })
     }, 1000)
-    
+
     return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
-    const container = testimonialsRef.current
-    if (!container) return
+    const scrollContainer = testimonialsRef.current
+    if (!scrollContainer) return
 
-    const scroll = () => {
-      const cardWidth = container.querySelector('.testimonial-card')?.clientWidth || 0
-      const gap = 24 // 1.5rem gap
-      const scrollAmount = cardWidth + gap
-      
-      // Check if we're at the halfway point (after original 10 testimonials)
-      const halfWidth = container.scrollWidth / 2
-      
-      if (container.scrollLeft >= halfWidth - scrollAmount) {
-        // Reset to beginning without animation
-        container.scrollLeft = container.scrollLeft - halfWidth
+    const scrollSpeed = 1
+    let intervalId: ReturnType<typeof setInterval>
+    let isScrolling = false
+
+    const autoScroll = () => {
+      if (scrollContainer && !isScrolling) {
+        isScrolling = true
+
+        scrollContainer.scrollLeft += scrollSpeed
+
+        // Quand on atteint environ la moitié (fin des cartes originales)
+        // On reset sans transition pour créer l'effet infini
+        const maxScroll = scrollContainer.scrollWidth / 2
+        if (scrollContainer.scrollLeft >= maxScroll) {
+          scrollContainer.scrollLeft = 0
+        }
+
+        isScrolling = false
       }
-      
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
     }
 
-    const interval = setInterval(scroll, 4000)
-    return () => clearInterval(interval)
+    intervalId = setInterval(autoScroll, 30)
+
+    // Pause au survol
+    const handleMouseEnter = () => {
+      clearInterval(intervalId)
+    }
+
+    const handleMouseLeave = () => {
+      intervalId = setInterval(autoScroll, 30)
+    }
+
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter)
+    scrollContainer.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      clearInterval(intervalId)
+      scrollContainer.removeEventListener('mouseenter', handleMouseEnter)
+      scrollContainer.removeEventListener('mouseleave', handleMouseLeave)
+    }
   }, [])
 
   return (
@@ -96,168 +152,110 @@ function Home() {
       <section className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
-            <div className="hero-badge">
-              <span>✨ New Collection 2025</span>
-            </div>
+            <span className="hero-badge">✨ Nouvelle Collection 2025</span>
             <h1 className="hero-title-luxury">
-              Elevate Your Style with Timeless Luxury
+              Découvrez L'Excellence
+              <br />
+              de Nos Produits
             </h1>
             <p className="hero-description-luxury">
-              Discover refined fashion made for those who live boldly and dress beautifully. 
-              Each piece blends modern elegance with timeless luxury.
+              Une sélection soigneusement choisie des meilleurs produits pour
+              répondre à tous vos besoins. Qualité, style et innovation au
+              rendez-vous.
             </p>
             <div className="hero-buttons">
               <Link to="/products" className="btn-view-detail">
-                Discover Collection
+                Voir la Collection →
               </Link>
-              <Link to="/products" className="btn-secondary">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 5L10 15M5 10L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                View Trends
-              </Link>
+              <a href="#categories" className="btn-secondary">
+                En savoir plus
+              </a>
             </div>
             <div className="hero-stats">
               <div className="stat-item">
-                <h3>50k+</h3>
-                <p>Happy Customers</p>
+                <h3>1000+</h3>
+                <p>Produits</p>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
                 <h3>5000+</h3>
-                <p>Unique Products</p>
+                <p>Clients Satisfaits</p>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
-                <h3>4.9★</h3>
-                <p>Average Rating</p>
+                <h3>4.9/5</h3>
+                <p>Évaluation</p>
               </div>
             </div>
           </div>
-          
           <div className="hero-image">
             <div className="hero-image-wrapper">
-              <img 
-                src={galleryImages[currentSlide]} 
-                alt="Fashion hero"
+              <img
+                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800"
+                alt="Collection"
                 className="hero-img"
               />
-              
-              {/* Product Card 1 */}
-              <div className="product-card product-card-1">
-                <div className="product-card-image">
-                  <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200&auto=format&fit=crop" alt="Tailored Cotton Oxford" />
-                </div>
-                <div className="product-card-info">
-                  <h4 className="product-name">Tailored Cotton Oxford</h4>
-                  <p className="product-price">$778,000</p>
-                  <div className="product-rating">
-                    <span>★★★★★</span>
-                  </div>
-                </div>
-                <button className="product-card-button">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 5L12 7L10 9M10 11L12 13L10 15M6 10H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Product Card 2 */}
-              <div className="product-card product-card-2">
-                <div className="product-card-image">
-                  <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=200&auto=format&fit=crop" alt="Classic Coat" />
-                </div>
-                <div className="product-card-info">
-                  <h4 className="product-name">Classic Coat</h4>
-                  <p className="product-price">$245,000</p>
-                  <div className="product-rating">
-                    <span>★★★★☆</span>
-                  </div>
-                </div>
-                <button className="product-card-button">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 5L12 7L10 9M10 11L12 13L10 15M6 10H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Gallery Carousel */}
-              <div className="hero-gallery">
-                <button 
-                  className="gallery-nav gallery-prev"
-                  onClick={() => setCurrentSlide(prev => (prev - 1 + galleryImages.length) % galleryImages.length)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M12 5L7 10L12 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </button>
-                <div className="gallery-images">
-                  {galleryImages.map((img, index) => (
-                    <div 
-                      key={index}
-                      className={`gallery-item ${index === currentSlide ? 'active' : ''}`}
-                      onClick={() => setCurrentSlide(index)}
-                    >
-                      <img src={img} alt={`Gallery ${index + 1}`} />
-                    </div>
-                  ))}
-                </div>
-                <button 
-                  className="gallery-nav gallery-next"
-                  onClick={() => setCurrentSlide(prev => (prev + 1) % galleryImages.length)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M8 5L13 10L8 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Categories */}
-      <section className="categories-section">
+      {/* Categories Section */}
+      <section className="categories-section" id="categories">
         <div className="categories-container">
           <div className="section-header">
-            <h2 className="section-title">Explore Our Collections</h2>
-            <p className="section-subtitle">Find exactly what you're looking for</p>
+            <h2 className="section-title">Nos Catégories</h2>
+            <p className="section-subtitle">Explorez notre collection</p>
           </div>
           <div className="categories-grid">
-            <Link to="/products" className="category-card">
+            <Link
+              to="/products?category=electronique"
+              className="category-card"
+            >
               <div className="category-image">
-                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&auto=format&fit=crop" alt="Women" />
+                <img
+                  src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500"
+                  alt="Électronique"
+                />
                 <div className="category-overlay">
-                  <span className="category-cta">Discover →</span>
+                  <span className="category-cta">Explorer</span>
                 </div>
               </div>
               <div className="category-info">
-                <h3 className="category-name">Women's Fashion</h3>
-                <span className="category-count">2,500+ items</span>
+                <h3 className="category-name">Électronique</h3>
+                <p className="category-count">250 Produits</p>
               </div>
             </Link>
-            <Link to="/products" className="category-card">
+
+            <Link to="/products?category=mode" className="category-card">
               <div className="category-image">
-                <img src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400&auto=format&fit=crop" alt="Men" />
+                <img
+                  src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=500"
+                  alt="Mode"
+                />
                 <div className="category-overlay">
-                  <span className="category-cta">Discover →</span>
+                  <span className="category-cta">Explorer</span>
                 </div>
               </div>
               <div className="category-info">
-                <h3 className="category-name">Men's Collection</h3>
-                <span className="category-count">1,800+ items</span>
+                <h3 className="category-name">Mode & Style</h3>
+                <p className="category-count">400 Produits</p>
               </div>
             </Link>
-            <Link to="/products" className="category-card">
+
+            <Link to="/products?category=maison" className="category-card">
               <div className="category-image">
-                <img src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&auto=format&fit=crop" alt="Accessories" />
+                <img
+                  src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500"
+                  alt="Maison"
+                />
                 <div className="category-overlay">
-                  <span className="category-cta">Discover →</span>
+                  <span className="category-cta">Explorer</span>
                 </div>
               </div>
               <div className="category-info">
-                <h3 className="category-name">Accessories</h3>
-                <span className="category-count">950+ items</span>
+                <h3 className="category-name">Maison & Décor</h3>
+                <p className="category-count">350 Produits</p>
               </div>
             </Link>
           </div>
@@ -269,354 +267,433 @@ function Home() {
         <div className="features-container">
           <div className="feature-card">
             <div className="feature-icon">
-              <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                <circle cx="25" cy="25" r="24" fill="currentColor"/>
-                <path d="M16 25L22 31L34 19" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width="52"
+                height="52"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M4 18h32v24H4z" fill="#1a1a1a" opacity="0.1" />
+                <rect
+                  x="4"
+                  y="14"
+                  width="32"
+                  height="28"
+                  rx="3"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M36 20h8l8 8v14h-4"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="14" cy="46" r="4" fill="currentColor" />
+                <circle cx="48" cy="46" r="4" fill="currentColor" />
+                <path
+                  d="M10 28h16M10 22h12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
-            <h3 className="feature-title">Premium Quality</h3>
-            <p className="feature-description">Carefully selected high-quality materials</p>
+            <h3 className="feature-title">Livraison Gratuite</h3>
+            <p className="feature-description">
+              Sur toutes les commandes de plus de 50€
+            </p>
           </div>
+
           <div className="feature-card">
             <div className="feature-icon">
-              <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                <circle cx="25" cy="25" r="24" fill="currentColor"/>
-                <circle cx="25" cy="25" r="12" stroke="white" strokeWidth="2.5"/>
-                <path d="M25 13V25L32 28" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              <svg
+                width="52"
+                height="52"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M32 8v48M32 8l-12 12M32 8l12 12"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.3"
+                />
+                <path
+                  d="M52 32H12c-4 0-4-8 0-8h32c6 0 6 16 0 16H20"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 48l-8-8 8-8"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="44" cy="24" r="2" fill="currentColor" />
               </svg>
             </div>
-            <h3 className="feature-title">Fast Delivery</h3>
-            <p className="feature-description">24h shipping worldwide</p>
+            <h3 className="feature-title">Retour Facile</h3>
+            <p className="feature-description">
+              Retours gratuits sous 30 jours
+            </p>
           </div>
+
           <div className="feature-card">
             <div className="feature-icon">
-              <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                <circle cx="25" cy="25" r="24" fill="currentColor"/>
-                <path d="M18 22L22 18L28 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M22 18V28C22 30 23 32 25 32C27 32 28 30 28 28V24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="25" cy="25" r="12" stroke="white" strokeWidth="2.5"/>
+              <svg
+                width="52"
+                height="52"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="6"
+                  y="16"
+                  width="52"
+                  height="36"
+                  rx="4"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+                <rect
+                  x="6"
+                  y="24"
+                  width="52"
+                  height="8"
+                  fill="currentColor"
+                  opacity="0.15"
+                />
+                <path
+                  d="M14 40h12M14 46h8"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx="48"
+                  cy="43"
+                  r="8"
+                  fill="#fff"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                />
+                <path
+                  d="M48 40v-2a2 2 0 0 1 4 0v2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <rect
+                  x="46"
+                  y="42"
+                  width="4"
+                  height="4"
+                  rx="1"
+                  fill="currentColor"
+                />
               </svg>
             </div>
-            <h3 className="feature-title">Free Returns</h3>
-            <p className="feature-description">30 days to change your mind, no fees</p>
+            <h3 className="feature-title">Paiement Sécurisé</h3>
+            <p className="feature-description">Transactions 100% sécurisées</p>
           </div>
+
           <div className="feature-card">
             <div className="feature-icon">
-              <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                <circle cx="25" cy="25" r="24" fill="currentColor"/>
-                <rect x="18" y="20" width="14" height="12" rx="1.5" stroke="white" strokeWidth="2.5"/>
-                <path d="M21 20V18C21 16 22 15 25 15C28 15 29 16 29 18V20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              <svg
+                width="52"
+                height="52"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M32 8C18 8 8 18 8 28v12c0 3 2 5 5 5h4c2 0 4-2 4-4v-8c0-2-2-4-4-4h-2c0-8 6-14 14-14h6c8 0 14 6 14 14h-2c-2 0-4 2-4 4v8c0 2 2 4 4 4h4c3 0 5-2 5-5V28c0-10-10-20-24-20h-6z"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M28 48c0 4 4 8 8 8s8-4 8-8"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="17" cy="33" r="2" fill="currentColor" />
+                <circle cx="47" cy="33" r="2" fill="currentColor" />
               </svg>
             </div>
-            <h3 className="feature-title">Secure Payment</h3>
-            <p className="feature-description">100% secure and encrypted transactions</p>
+            <h3 className="feature-title">Support 24/7</h3>
+            <p className="feature-description">
+              Service client toujours disponible
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Trending Products */}
+      {/* Trending Section */}
       <section className="trending-section">
         <div className="trending-container">
           <div className="section-header">
-            <h2 className="section-title">Trending Products</h2>
-            <p className="section-subtitle">Our customers' favorites</p>
+            <h2 className="section-title">Produits Tendance</h2>
+            <p className="section-subtitle">Les plus populaires du moment</p>
           </div>
           <div className="trending-grid">
-            <div className="trending-card">
+            <Link to="/products/1" className="trending-card">
               <div className="trending-image-wrapper">
                 <div className="trending-image">
-                  <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop" alt="Product" />
-                </div>
-                <div className="product-dots">
-                  <span className="dot active"></span>
-                  <span className="dot"></span>
-                  <span className="dot"></span>
+                  <img
+                    src={productImages.product1[activeImages.product1]}
+                    alt="Lunettes de Soleil Designer"
+                  />
+                  <div className="image-dots">
+                    {productImages.product1.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`dot ${activeImages.product1 === index ? 'active' : ''}`}
+                        onClick={e =>
+                          handleDotClickWithStop(e, 'product1', index)
+                        }
+                      ></span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="trending-info">
                 <div className="product-top">
-                  <span className="trending-badge bestseller">Best Seller</span>
-                  <button className="favorite-btn">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 17.5L8.825 16.45C4.4 12.475 1.5 9.875 1.5 6.75C1.5 4.15 3.525 2.125 6.125 2.125C7.575 2.125 9 2.8 10 3.925C11 2.8 12.425 2.125 13.875 2.125C16.475 2.125 18.5 4.15 18.5 6.75C18.5 9.875 15.6 12.475 11.175 16.45L10 17.5Z"/>
-                    </svg>
+                  <span className="trending-badge bestseller">Bestseller</span>
+                  <button
+                    className="favorite-btn"
+                    onClick={e => handleButtonClick(e, 'favorite-product1')}
+                  >
+                    ♥
                   </button>
                 </div>
-                <h4 className="trending-name">Tailored Oxford Shirt</h4>
+                <h3 className="trending-name">Lunettes de Soleil Designer</h3>
                 <div className="trending-price-buy">
-                  <p className="trending-price">
-                    <span className="price-label">Price</span>
-                    <span className="current-price">$180.00</span>
-                  </p>
-                  <button className="buy-now-btn">Buy Now</button>
+                  <div className="trending-price">
+                    <span className="price-label">Prix</span>
+                    <span className="current-price">89.99€</span>
+                  </div>
+                  <button
+                    className="buy-now-btn"
+                    onClick={e => handleButtonClick(e, 'buy-product1')}
+                  >
+                    Acheter
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className="trending-card">
+            </Link>
+
+            <Link to="/products/2" className="trending-card">
               <div className="trending-image-wrapper">
                 <div className="trending-image">
-                  <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&auto=format&fit=crop" alt="Product" />
-                </div>
-                <div className="product-dots">
-                  <span className="dot active"></span>
-                  <span className="dot"></span>
-                  <span className="dot"></span>
+                  <img
+                    src={productImages.product2[activeImages.product2]}
+                    alt="Montre Connectée Elite"
+                  />
+                  <div className="image-dots">
+                    {productImages.product2.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`dot ${activeImages.product2 === index ? 'active' : ''}`}
+                        onClick={e =>
+                          handleDotClickWithStop(e, 'product2', index)
+                        }
+                      ></span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="trending-info">
                 <div className="product-top">
-                  <span className="trending-badge new">New</span>
-                  <button className="favorite-btn">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 17.5L8.825 16.45C4.4 12.475 1.5 9.875 1.5 6.75C1.5 4.15 3.525 2.125 6.125 2.125C7.575 2.125 9 2.8 10 3.925C11 2.8 12.425 2.125 13.875 2.125C16.475 2.125 18.5 4.15 18.5 6.75C18.5 9.875 15.6 12.475 11.175 16.45L10 17.5Z"/>
-                    </svg>
+                  <span className="trending-badge new">Nouveau</span>
+                  <button
+                    className="favorite-btn"
+                    onClick={e => handleButtonClick(e, 'favorite-product2')}
+                  >
+                    ♥
                   </button>
                 </div>
-                <h4 className="trending-name">Classic Coat</h4>
+                <h3 className="trending-name">Montre Connectée Elite</h3>
                 <div className="trending-price-buy">
-                  <p className="trending-price">
-                    <span className="price-label">Price</span>
-                    <span className="current-price">$245.00</span>
-                  </p>
-                  <button className="buy-now-btn">Buy Now</button>
+                  <div className="trending-price">
+                    <span className="price-label">Prix</span>
+                    <span className="current-price">249.99€</span>
+                  </div>
+                  <button
+                    className="buy-now-btn"
+                    onClick={e => handleButtonClick(e, 'buy-product2')}
+                  >
+                    Acheter
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className="trending-card">
+            </Link>
+
+            <Link to="/products/3" className="trending-card">
               <div className="trending-image-wrapper">
                 <div className="trending-image">
-                  <img src="https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&auto=format&fit=crop" alt="Product" />
-                </div>
-                <div className="product-dots">
-                  <span className="dot active"></span>
-                  <span className="dot"></span>
-                  <span className="dot"></span>
+                  <img
+                    src={productImages.product3[activeImages.product3]}
+                    alt="Casque Audio Premium"
+                  />
+                  <div className="image-dots">
+                    {productImages.product3.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`dot ${activeImages.product3 === index ? 'active' : ''}`}
+                        onClick={e =>
+                          handleDotClickWithStop(e, 'product3', index)
+                        }
+                      ></span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="trending-info">
                 <div className="product-top">
                   <span className="trending-badge sale">-30%</span>
-                  <button className="favorite-btn">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 17.5L8.825 16.45C4.4 12.475 1.5 9.875 1.5 6.75C1.5 4.15 3.525 2.125 6.125 2.125C7.575 2.125 9 2.8 10 3.925C11 2.8 12.425 2.125 13.875 2.125C16.475 2.125 18.5 4.15 18.5 6.75C18.5 9.875 15.6 12.475 11.175 16.45L10 17.5Z"/>
-                    </svg>
+                  <button
+                    className="favorite-btn"
+                    onClick={e => handleButtonClick(e, 'favorite-product3')}
+                  >
+                    ♥
                   </button>
                 </div>
-                <h4 className="trending-name">Elegant Dress</h4>
+                <h3 className="trending-name">Casque Audio Premium</h3>
                 <div className="trending-price-buy">
-                  <p className="trending-price">
-                    <span className="price-label">Price</span>
-                    <span className="current-price">$420.00</span>
-                  </p>
-                  <button className="buy-now-btn">Buy Now</button>
+                  <div className="trending-price">
+                    <span className="price-label">Prix</span>
+                    <span className="current-price">149.99€</span>
+                  </div>
+                  <button
+                    className="buy-now-btn"
+                    onClick={e => handleButtonClick(e, 'buy-product3')}
+                  >
+                    Acheter
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className="trending-card">
+            </Link>
+
+            <Link to="/products/4" className="trending-card">
               <div className="trending-image-wrapper">
                 <div className="trending-image">
-                  <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&auto=format&fit=crop" alt="Product" />
-                </div>
-                <div className="product-dots">
-                  <span className="dot active"></span>
-                  <span className="dot"></span>
-                  <span className="dot"></span>
+                  <img
+                    src={productImages.product4[activeImages.product4]}
+                    alt="Sneakers Sport Edition"
+                  />
+                  <div className="image-dots">
+                    {productImages.product4.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`dot ${activeImages.product4 === index ? 'active' : ''}`}
+                        onClick={e =>
+                          handleDotClickWithStop(e, 'product4', index)
+                        }
+                      ></span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="trending-info">
                 <div className="product-top">
-                  <button className="favorite-btn">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 17.5L8.825 16.45C4.4 12.475 1.5 9.875 1.5 6.75C1.5 4.15 3.525 2.125 6.125 2.125C7.575 2.125 9 2.8 10 3.925C11 2.8 12.425 2.125 13.875 2.125C16.475 2.125 18.5 4.15 18.5 6.75C18.5 9.875 15.6 12.475 11.175 16.45L10 17.5Z"/>
-                    </svg>
+                  <span className="trending-badge bestseller">Bestseller</span>
+                  <button
+                    className="favorite-btn"
+                    onClick={e => handleButtonClick(e, 'favorite-product4')}
+                  >
+                    ♥
                   </button>
                 </div>
-                <h4 className="trending-name">Premium Blazer</h4>
+                <h3 className="trending-name">Sneakers Sport Edition</h3>
                 <div className="trending-price-buy">
-                  <p className="trending-price">
-                    <span className="price-label">Price</span>
-                    <span className="current-price">$890.00</span>
-                  </p>
-                  <button className="buy-now-btn">Buy Now</button>
+                  <div className="trending-price">
+                    <span className="price-label">Prix</span>
+                    <span className="current-price">129.99€</span>
+                  </div>
+                  <button
+                    className="buy-now-btn"
+                    onClick={e => handleButtonClick(e, 'buy-product4')}
+                  >
+                    Acheter
+                  </button>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
           <div className="trending-cta">
             <Link to="/products" className="btn-view-all">
-              View All Products
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+              Voir Tout →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Best Sellers Section */}
-      <section className="bestsellers-section">
-        <div className="bestsellers-container">
-          <div className="section-header">
-            <h2 className="section-title">Best Sellers</h2>
-            <p className="section-subtitle">Discover our customers' top picks</p>
-          </div>
-          
-          <div className="bestsellers-grid">
-            <div className="bestseller-card bestseller-large">
-              <div className="bestseller-image">
-                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop" alt="Best Seller" />
-                <div className="bestseller-overlay">
-                  <span className="bestseller-rank">#1</span>
-                  <button className="quick-view-btn">Quick View</button>
-                </div>
-              </div>
-              <div className="bestseller-info">
-                <div className="bestseller-header">
-                  <div>
-                    <h3 className="bestseller-name">Premium Leather Jacket</h3>
-                    <p className="bestseller-category">Outerwear</p>
-                  </div>
-                  <button className="favorite-btn-white">
-                    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M10 17.5L8.825 16.45C4.4 12.475 1.5 9.875 1.5 6.75C1.5 4.15 3.525 2.125 6.125 2.125C7.575 2.125 9 2.8 10 3.925C11 2.8 12.425 2.125 13.875 2.125C16.475 2.125 18.5 4.15 18.5 6.75C18.5 9.875 15.6 12.475 11.175 16.45L10 17.5Z"/>
-                    </svg>
-                  </button>
-                </div>
-                <div className="bestseller-rating">
-                  <span className="stars">★★★★★</span>
-                  <span className="rating-count">(1,284 reviews)</span>
-                </div>
-                <div className="bestseller-price-action">
-                  <div className="price-section">
-                    <span className="bestseller-price">$349.00</span>
-                    <span className="sold-count">2.5k+ sold</span>
-                  </div>
-                  <Link to="/products" className="shop-now-btn">
-                    Shop Now
-                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                      <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="bestseller-small-grid">
-              <div className="bestseller-card bestseller-small">
-                <div className="bestseller-image">
-                  <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=400&auto=format&fit=crop" alt="Best Seller" />
-                  <div className="bestseller-overlay">
-                    <span className="bestseller-rank">#2</span>
-                  </div>
-                </div>
-                <div className="bestseller-info">
-                  <h4 className="bestseller-name-small">Designer Sneakers</h4>
-                  <div className="bestseller-meta">
-                    <span className="stars-small">★★★★★</span>
-                    <span className="bestseller-price-small">$189.00</span>
-                  </div>
-                  <Link to="/products" className="buy-now-btn-small">Buy Now</Link>
-                </div>
-              </div>
-
-              <div className="bestseller-card bestseller-small">
-                <div className="bestseller-image">
-                  <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop" alt="Best Seller" />
-                  <div className="bestseller-overlay">
-                    <span className="bestseller-rank">#3</span>
-                  </div>
-                </div>
-                <div className="bestseller-info">
-                  <h4 className="bestseller-name-small">Classic Watch</h4>
-                  <div className="bestseller-meta">
-                    <span className="stars-small">★★★★☆</span>
-                    <span className="bestseller-price-small">$299.00</span>
-                  </div>
-                  <Link to="/products" className="buy-now-btn-small">Buy Now</Link>
-                </div>
-              </div>
-
-              <div className="bestseller-card bestseller-small">
-                <div className="bestseller-image">
-                  <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&auto=format&fit=crop" alt="Best Seller" />
-                  <div className="bestseller-overlay">
-                    <span className="bestseller-rank">#4</span>
-                  </div>
-                </div>
-                <div className="bestseller-info">
-                  <h4 className="bestseller-name-small">Luxury Handbag</h4>
-                  <div className="bestseller-meta">
-                    <span className="stars-small">★★★★★</span>
-                    <span className="bestseller-price-small">$459.00</span>
-                  </div>
-                  <Link to="/products" className="buy-now-btn-small">Buy Now</Link>
-                </div>
-              </div>
-
-              <div className="bestseller-card bestseller-small">
-                <div className="bestseller-image">
-                  <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&auto=format&fit=crop" alt="Best Seller" />
-                  <div className="bestseller-overlay">
-                    <span className="bestseller-rank">#5</span>
-                  </div>
-                </div>
-                <div className="bestseller-info">
-                  <h4 className="bestseller-name-small">Sunglasses</h4>
-                  <div className="bestseller-meta">
-                    <span className="stars-small">★★★★★</span>
-                    <span className="bestseller-price-small">$149.00</span>
-                  </div>
-                  <Link to="/products" className="buy-now-btn-small">Buy Now</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Flash Sale Timer Section */}
+      {/* Flash Sale Section */}
       <section className="flash-sale-section">
         <div className="flash-sale-container">
           <div className="flash-sale-product-image">
-            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop" alt="Sale product" />
+            <img
+              src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600"
+              alt="Produit en Promotion"
+            />
             <div className="discount-badge">-50%</div>
           </div>
           <div className="flash-sale-content">
             <div className="flash-sale-header">
-              <span className="flash-badge">🔥 FLASH SALE</span>
-              <h2 className="flash-sale-title">Limited Offer - Don't Miss Out!</h2>
+              <span className="flash-badge">⚡ VENTE FLASH</span>
+              <h2 className="flash-sale-title">
+                Offre Limitée - Ne Manquez Pas !
+              </h2>
               <p className="flash-sale-description">
-                Get 50% off our exclusive collection
+                Profitez de réductions exceptionnelles sur une sélection de
+                produits
               </p>
             </div>
-            
             <div className="timer-container">
               <div className="timer-box">
-                <div className="timer-value">{String(timeLeft.days).padStart(2, '0')}</div>
-                <div className="timer-label">Days</div>
+                <div className="timer-value">
+                  {String(timeLeft.days).padStart(2, '0')}
+                </div>
+                <div className="timer-label">Jours</div>
               </div>
-              <div className="timer-separator">:</div>
+              <span className="timer-separator">:</span>
               <div className="timer-box">
-                <div className="timer-value">{String(timeLeft.hours).padStart(2, '0')}</div>
-                <div className="timer-label">Hours</div>
+                <div className="timer-value">
+                  {String(timeLeft.hours).padStart(2, '0')}
+                </div>
+                <div className="timer-label">Heures</div>
               </div>
-              <div className="timer-separator">:</div>
+              <span className="timer-separator">:</span>
               <div className="timer-box">
-                <div className="timer-value">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                <div className="timer-value">
+                  {String(timeLeft.minutes).padStart(2, '0')}
+                </div>
                 <div className="timer-label">Minutes</div>
               </div>
-              <div className="timer-separator">:</div>
+              <span className="timer-separator">:</span>
               <div className="timer-box">
-                <div className="timer-value">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                <div className="timer-label">Seconds</div>
+                <div className="timer-value">
+                  {String(timeLeft.seconds).padStart(2, '0')}
+                </div>
+                <div className="timer-label">Secondes</div>
               </div>
             </div>
-
             <Link to="/products" className="flash-sale-btn">
-              Claim Offer Now
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7 5L12 10L7 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+              Profiter de l'Offre →
             </Link>
           </div>
         </div>
@@ -626,28 +703,252 @@ function Home() {
       <section className="testimonials-section">
         <div className="testimonials-container">
           <div className="section-header">
-            <h2 className="section-title">What Our Customers Say</h2>
-            <p className="section-subtitle">Over 50,000 happy customers</p>
+            <h2 className="section-title">Ce Que Disent Nos Clients</h2>
+            <p className="section-subtitle">
+              Des milliers de clients satisfaits
+            </p>
           </div>
           <div className="testimonials-grid" ref={testimonialsRef}>
-            {/* Render testimonials twice for infinite loop effect */}
-            {[...testimonials, ...testimonials].map((testimonial, index) => (
-              <div className="testimonial-card" key={index}>
-                <div className="testimonial-stars">{"★".repeat(testimonial.stars)}{"☆".repeat(5 - testimonial.stars)}</div>
-                <p className="testimonial-text">
-                  "{testimonial.text}"
-                </p>
-                <div className="testimonial-author">
-                  <div className="author-avatar">
-                    <img src={`https://i.pravatar.cc/150?img=${testimonial.img}`} alt={testimonial.name} />
-                  </div>
-                  <div className="author-info">
-                    <h4 className="author-name">{testimonial.name}</h4>
-                    <p className="author-location">{testimonial.location}</p>
-                  </div>
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Excellente expérience d'achat ! Produits de qualité et
+                livraison rapide. Je recommande vivement."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=1"
+                    alt="Marie Dubois"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Marie Dubois</h4>
+                  <p className="author-location">Paris, France</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Service client impeccable et produits conformes aux attentes.
+                Une boutique en ligne à découvrir absolument !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=12"
+                    alt="Jean Martin"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Jean Martin</h4>
+                  <p className="author-location">Lyon, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "J'adore cette boutique ! Grande variété de produits et prix
+                très compétitifs. Mon site préféré pour le shopping en ligne."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=5"
+                    alt="Sophie Laurent"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Sophie Laurent</h4>
+                  <p className="author-location">Marseille, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Produits de qualité exceptionnelle et service rapide. Une très
+                belle découverte !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=8"
+                    alt="Pierre Leroy"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Pierre Leroy</h4>
+                  <p className="author-location">Toulouse, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Interface intuitive et paiement sécurisé. Je commande
+                régulièrement sur ce site."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=20"
+                    alt="Emma Bernard"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Emma Bernard</h4>
+                  <p className="author-location">Bordeaux, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Très satisfait de mes achats. La qualité est toujours au
+                rendez-vous !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=15"
+                    alt="Lucas Moreau"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Lucas Moreau</h4>
+                  <p className="author-location">Nantes, France</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Duplicate cards for infinite scroll effect */}
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Excellente expérience d'achat ! Produits de qualité et
+                livraison rapide. Je recommande vivement."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=1"
+                    alt="Marie Dubois"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Marie Dubois</h4>
+                  <p className="author-location">Paris, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Service client impeccable et produits conformes aux attentes.
+                Une boutique en ligne à découvrir absolument !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=12"
+                    alt="Jean Martin"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Jean Martin</h4>
+                  <p className="author-location">Lyon, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "J'adore cette boutique ! Grande variété de produits et prix
+                très compétitifs. Mon site préféré pour le shopping en ligne."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=5"
+                    alt="Sophie Laurent"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Sophie Laurent</h4>
+                  <p className="author-location">Marseille, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Produits de qualité exceptionnelle et service rapide. Une très
+                belle découverte !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=8"
+                    alt="Pierre Leroy"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Pierre Leroy</h4>
+                  <p className="author-location">Toulouse, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Interface intuitive et paiement sécurisé. Je commande
+                régulièrement sur ce site."
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=20"
+                    alt="Emma Bernard"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Emma Bernard</h4>
+                  <p className="author-location">Bordeaux, France</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-text">
+                "Très satisfait de mes achats. La qualité est toujours au
+                rendez-vous !"
+              </p>
+              <div className="testimonial-author">
+                <div className="author-avatar">
+                  <img
+                    src="https://i.pravatar.cc/150?img=15"
+                    alt="Lucas Moreau"
+                  />
+                </div>
+                <div className="author-info">
+                  <h4 className="author-name">Lucas Moreau</h4>
+                  <p className="author-location">Nantes, France</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -27,17 +27,17 @@ function Header() {
             HOME
             <span className="badge badge-hot">Hot</span>
           </Link>
-          <Link to="/products" className="nav-link">
+          <Link to="/products?filter=new" className="nav-link">
             NEW ARRIVALS
             <span className="badge badge-new">New</span>
           </Link>
           <Link to="/products" className="nav-link">
             SHOP
           </Link>
-          <Link to="/products" className="nav-link">
+          <Link to="/showcase" className="nav-link">
             SHOWCASE
           </Link>
-          <Link to="/products" className="nav-link">
+          <Link to="/track-order" className="nav-link">
             TRACK ORDER
           </Link>
         </nav>
